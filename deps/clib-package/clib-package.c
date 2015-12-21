@@ -387,9 +387,16 @@ clib_package_new_from_slug(const char *slug, int verbose) {
   // force version number
   if (pkg->version) {
     if (0 != strcmp(version, pkg->version)) {
-      _debug("forcing version number: %s (%s)", version, pkg->version);
-      free(pkg->version);
-      pkg->version = version;
+      if (0 == strcmp("master", version))
+      {
+        free(version);
+      }
+      else
+      {
+        _debug("forcing version number: %s (%s)", version, pkg->version);
+        free(pkg->version);
+        pkg->version = version;
+      }
     } else {
       free(version);
     }
@@ -399,29 +406,20 @@ clib_package_new_from_slug(const char *slug, int verbose) {
 
   // force package author (don't know how this could fail)
   if (pkg->author) {
-    if (0 != strcmp(author, pkg->author)) {
-      free(pkg->author);
-      pkg->author = author;
-    } else {
-      free(author);
-    }
+    free(author);
   } else {
     pkg->author = author;
   }
 
-  // force package repo
   if (pkg->repo) {
-    if (0 != strcmp(repo, pkg->repo)) {
-      free(pkg->repo);
-      pkg->repo = repo;
-    } else {
-      free(repo);
-    }
+    if (!(url = clib_package_url(pkg->author, pkg->name, pkg->version))) goto error;
+    free(repo);
+    pkg->url = url;
   } else {
     pkg->repo = repo;
+    pkg->url = url;
   }
 
-  pkg->url = url;
   return pkg;
 
 error:
